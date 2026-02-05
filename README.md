@@ -1,2 +1,2 @@
-# Kmeans_from_stratch
-Kmeans from stratch
+# Kmeans_from_scratch
+Kmeans from scratch 
