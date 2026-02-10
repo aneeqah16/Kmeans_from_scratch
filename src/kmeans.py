@@ -6,122 +6,126 @@ Date : Februray 2026
 """
 
 import random
-import math
+import numpy as np
+class Kmeans():
+    def __init__(self, K,max_iters = 100):
+        self.K = K
+        self.max_iters = max_iters 
+    def distance(self,p1, p2):
+        return np.linalg.norm(p1 - p2)
 
-def distance_squared(p1,p2):
-    "Calculate squared Euclidean distance between two points"
-    return (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2 
+    def distance_squared(self,p1, p2):
+        diff = np.array(p1) - np.array(p2)
+        return np.dot(diff, diff)
+    def init_centroids(self, points, K, seed=None):
+        if K > len(points):
+            raise ValueError(f"K ({K} cannot be greater than the number of points {len(points)}")
 
-def distance(p1,p2):
-    "Calculate Euclidean distance bewteen two points"
-    return math.sqrt(distance_squared(p1,p2))
+        if seed is not None:
+            random.seed(seed)
+        points_list = list(points)
+        return [np.array(p, dtype=float) for p in random.sample(points_list, K)]
+    def assign_clusters(self, points, centroids):
+        assignments = []
+        
+        for point in points:
+            min_distance = float("inf")
+            closest_centroid = 0
 
-def init_centroids(points, K,seed = None):
-    "Initialize K centroids by randomly selecting k distinct points"
-    if K >len(points):
-        raise ValueError(f"K ({K} cannot be greater than the number of points {len(points)}")
-    
-    if seed is not None:
-        random.seed(seed)
-    
-    return random.sample(points, K)
+            for i, centroid in enumerate(centroids):
+                dist = self.distance_squared(point, centroid)
 
-def assign_clusters(points , centroids):
-    """Assign each point to the nearst centroid"""
+                if dist < min_distance:
+                    min_distance = dist
+                    closest_centroid = i
 
-    assignments = []
+            assignments.append(closest_centroid)
 
-    for point in points:
-        min_distance = float("inf")
-        closest_centroid = 0
+        return assignments
 
-        for i, centroid in enumerate(centroids):
-            dist = distance_squared(point, centroid)
+    def update_clusters(self, points, assignments):
+        new_centroids = []
 
-            if dist< min_distance:
-                min_distance = dist
-                closest_centroid = i
+        for k in range(self.K):
+            cluster_points = [points[i] for i in range(len(points)) if assignments[i] == k]
 
-        assignments.append(closest_centroid)
+            if len(cluster_points) == 0:
+                new_centroid = random.choice(points)
+            else:
+                mean_x = sum(p[0] for p in cluster_points) / len(cluster_points)
+                mean_y = sum(p[1] for p in cluster_points) / len(cluster_points)
+                new_centroid = np.array([mean_x, mean_y])
 
-    return assignments
+            new_centroids.append(new_centroid)
+        return new_centroids
 
-def update_clusters(points, assignments,K):
-    new_centroids = []
+    def compute_sse(self, points, assignments, centroids):
+        sse = 0.0
 
-    for k in range(K):
-        cluster_points = [points[i] for i in range(len(points))]
+        for i, point in enumerate(points):
+            clusters_id = assignments[i]
+            centroid = centroids[clusters_id]
+            sse += self.distance_squared(point, centroid)
 
-        if len(cluster_points) == 0:
-            new_centroid = random.choice(points)
-        else:
-            mean_x = sum(p[0] for p in cluster_points) / len(cluster_points)
-            mean_y = sum(p[1] for p in cluster_points) / len(cluster_points)
-            new_centroid = (mean_x, mean_y)
+        return sse
+    def max_centroid_movement(self, old_centroids, new_centroids):
+        max_movement = 0.0
 
-        new_centroids.append(new_centroid)
-    return new_centroids
-
-def compute_sse(points,assignment,centroids):
-    "Computer Sum of Squared Errors SSE"
-    sse = 0.0
-
-    for i, point in enumerate(points):
-        clusters_id = assignment[i]
-        centroid = centroids[clusters_id]
-        sse += distance_squared(points,centroid)
-
-    return sse
-
-def max_centroid_movement(old_centroids, new_centroids):
-    """Calculate the maximum distance of any centroid"""
-    max_movement = 0.0
-
-    for old, new in zip(old_centroids, new_centroids):
-        movement = distance(old, new)
-        if movement>max_movement:
-            max_movement = movement
+        for old, new in zip(old_centroids, new_centroids):
+            movement = self.distance(np.array(old), np.array(new))
+            if movement > max_movement:
+                max_movement = movement
 
         return max_movement
+    def kmeans(self, points, max_iters = 100, tol = 1e-4, seed = None):
+        K = self.K
+        if K < 1:
+            raise ValueError("K must be at least 1")
+        if K > len(points):
+            raise ValueError(f"k:{K} cannot be greater than number of points ({len(points)})")
+        centroids = self.init_centroids(points, K, seed)
+        previous_assignment = None
+        iterations = 0
+
+        for iteration in range(max_iters):
+            iterations = iteration + 1
+
+            assignments = self.assign_clusters(points, centroids)
+
+            new_centroids = self.update_clusters(points, assignments)
+            movement = self.max_centroid_movement(centroids, new_centroids)
+            print(f"Iteration {iteration + 1}, movement = {movement}")
+            if previous_assignment is not None and previous_assignment == assignments:
+                break
+
+            
+            if movement < tol:
+                break
+
+            centroids = new_centroids
+            previous_assignment = assignments[:]
+        iteration = iteration + 1
+
+        sse = self.compute_sse(points, assignments, centroids)
+        
+
+
+        return centroids, assignments, sse, iterations
+    def fit(self, points):
+        points = np.array(points)
+        self.centroids, self.assignments, self.sse, self.iterations = self.kmeans(points, self.max_iters)
+
+        return self
     
-def kmeans(points, K, max_iters = 100, tol = 1e-4, seed = None):
-    """Perform Kmeans clustering
-    Returns : (centroids, assignments,sse, iterations)
-    """
-    if K<1:
-        raise ValueError("K must be at least 1")
-    if K>len(points):
-        raise ValueError(f"k:{K} cannot be greater than number of points ({len(points)})")
-    centroids = init_centroids(points,K, seed)
-    previous_assignment = None
-    iterations = 0
+    def predict(self, points):
+        points = np.array(points)
+        return self.assign_clusters(points, self.centroids)
+    
+    
+    
+    
 
-    for iteration in range(max_iters):
-        iterations = iteration + 1
 
-        assignments = assign_clusters(points, centroids)
 
-        new_centroids = update_clusters(points, assignments)
-
-        if previous_assignment is not None and previous_assignment== assignments :
-            break
-
-        movement = max_centroid_movement(centroids, new_centroids)
-        if movement < tol:
-            break
-
-        centroids = new_centroids
-        previous_assignment = assignments[:]
-
-    sse = compute_sse(points,assignments,centroids)
-
-    return centroids, assignments, sse, iterations
-
-def get_cluster_sizes(assignments,K):
-    """Count Number of points in each cluster"""
-    sizes = [0] * K
-    for cluster_id in assignments:
-        sizes[cluster_id] +=1
-
-    return sizes
+        
 
