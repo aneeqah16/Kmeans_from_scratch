@@ -77,54 +77,58 @@ class Kmeans():
                 max_movement = movement
 
         return max_movement
-    def kmeans(self, points, max_iters = 100, tol = 1e-4, seed = None,verbose = False):
+    def kmeans(self, points, tol=1e-4, init="random", verbose=False, seed=None):
+        points = np.array(points)
         K = self.K
+
         if K < 1:
             raise ValueError("K must be at least 1")
         if K > len(points):
-            raise ValueError(f"k:{K} cannot be greater than number of points ({len(points)})")
-        centroids = self.init_centroids(points, K, seed)
+            raise ValueError(f"K ({K}) cannot be greater than number of points ({len(points)})")
+
+        # Initialization
+        if init == "kmeans++":
+            centroids = self.init_centroids_plusplus(points, seed)
+        elif init == "random":
+            centroids = self.init_centroids(points, K, seed)
+        else:
+            raise ValueError("init must be 'random' or 'kmeans++'")
+
         previous_assignment = None
         iterations = 0
 
-        for iteration in range(max_iters):
+        for iteration in range(self.max_iters):
             iterations = iteration + 1
 
             assignments = self.assign_clusters(points, centroids)
-
             new_centroids = self.update_clusters(points, assignments)
+
             movement = self.max_centroid_movement(centroids, new_centroids)
+
             if verbose:
                 print(f"Iteration {iteration + 1}, movement = {movement}")
+
             if previous_assignment is not None and previous_assignment == assignments:
                 break
 
-            
             if movement < tol:
                 break
 
             centroids = new_centroids
             previous_assignment = assignments[:]
-        # iteration = iteration + 1
 
         sse = self.compute_sse(points, assignments, centroids)
+
+        # Store results
+        self.centroids = centroids
+        self.assignments = assignments
+        self.sse = sse
+        self.iterations = iterations
+
         return centroids, assignments, sse, iterations
     
-    def fit(self, points):
-        points = np.array(points)
-        self.centroids, self.assignments, self.sse, self.iterations = self.kmeans(points, self.max_iters)
-
-        return self
-    
-    def predict(self, points):
-        points = np.array(points)
-        return self.assign_clusters(points, self.centroids)
-    
-
-    
-    
-
-
-
-        
-
+    def cluster_sizes(self):
+        sizes = [0] * self.K
+        for cluster_id in self.assignments:
+            sizes[cluster_id] += 1
+        return sizes
