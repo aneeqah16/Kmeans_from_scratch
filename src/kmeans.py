@@ -146,7 +146,7 @@ class KMeans:
     #                   MAIN ALGORITHM  
     # ============================================================  
   
-    def run(self, points, tol=1e-4, init="random", verbose=False, seed=None):  
+    def kmeans(self, points, tol=1e-4, init="random", verbose=False, seed=None):  
         """  
         Run the K-Means algorithm to cluster data.  
           
@@ -238,7 +238,7 @@ class KMeans:
         for i in range(n_init):  
             # Create temporary model for this run  
             temp_model = KMeans(K=self.K, max_iters=self.max_iters)  
-            temp_model.run(points, tol=tol, init=init, seed=i, verbose=False)  
+            temp_model.kmeans(points, tol=tol, init=init, seed=i, verbose=False)  
   
             if verbose:  
                 print(f"  Try {i+1}/{n_init}: quality={temp_model.sse:.4f}")  
