@@ -343,39 +343,7 @@ class KMeans:
                 print(f"  K={k}: quality={model.sse:.4f}")  
   
         return results  
-  
-    @staticmethod  
-    def scale_minmax(points):  
-        """  
-        Scale all features to range [0, 1].  
-        Useful when features have different units/scales.  
-          
-        Returns:  
-            (scaled_points, scaling_info)  
-        """  
-        points = np.array(points)  
-        mins = points.min(axis=0)  
-        maxs = points.max(axis=0)  
-        ranges = maxs - mins  
-        ranges[ranges == 0] = 1  
-        scaled = (points - mins) / ranges  
-        return scaled, {'mins': mins, 'maxs': maxs}  
-  
-    @staticmethod  
-    def scale_zscore(points):  
-        """  
-        Scale features to mean=0, standard deviation=1.  
-        Useful when you want standardized values.  
-          
-        Returns:  
-            (scaled_points, scaling_info)  
-        """  
-        points = np.array(points)  
-        means = points.mean(axis=0)  
-        stds = points.std(axis=0)  
-        stds[stds == 0] = 1  
-        scaled = (points - means) / stds  
-        return scaled, {'means': means, 'stds': stds}  
+   
   
     # ============================================================  
     #                   STRING REPRESENTATIONS  

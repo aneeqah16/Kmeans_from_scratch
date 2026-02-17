@@ -1,8 +1,19 @@
+"""
+Data loading and preprocessing utilities for K-means clustering.
+
+Handles CSV loading, sample data generation , feature scaling.
+
+Author : Abrar Ahmad
+Date: Feburary 2026
+"""
 import csv
 import random
 import os
+import numpy as np
 
-
+#===================================================================
+#                        DATA GENERATION
+#===================================================================
 def generate_sample_data():
     """Generate random 2D points with two clusters."""
     points = []
@@ -20,7 +31,9 @@ def generate_sample_data():
         points.append((x, y))
 
     return points
-
+# ==================================================================
+#                      FILE HANDLING
+#===================================================================
 
 def save_points_to_csv(points, csv_path):
     """Save points to CSV file."""
@@ -57,7 +70,7 @@ def load_points(csv_path):
                     y = float(row[1])
                     points.append((x, y))
                 except ValueError:
-                    print(f"⚠ Skipping invalid row: {row}")
+                    print(f"Warning: Skipping invalid row: {row}")
 
         return points
 
@@ -66,9 +79,45 @@ def load_points(csv_path):
         points = generate_sample_data()
         save_points_to_csv(points, csv_path)
         return points
+#====================================================================
+#                         FEATURE SCALING
+#====================================================================
 
-
-# Test
+  
+    def scale_minmax(points):  
+        """  
+        Scale all features to range [0, 1].  
+        Useful when features have different units/scales.  
+          
+        Returns:  
+            (scaled_points, scaling_info)  
+        """  
+        points = np.array(points)  
+        mins = points.min(axis=0)  
+        maxs = points.max(axis=0)  
+        ranges = maxs - mins  
+        ranges[ranges == 0] = 1  
+        scaled = (points - mins) / ranges  
+        return scaled, {'mins': mins, 'maxs': maxs}  
+  
+    @staticmethod  
+    def scale_zscore(points):  
+        """  
+        Scale features to mean=0, standard deviation=1.  
+        Useful when you want standardized values.  
+          
+        Returns:  
+            (scaled_points, scaling_info)  
+        """  
+        points = np.array(points)  
+        means = points.mean(axis=0)  
+        stds = points.std(axis=0)  
+        stds[stds == 0] = 1  
+        scaled = (points - means) / stds  
+        return scaled, {'means': means, 'stds': stds} 
+#===================================================================
+#                        TEST
+#===================================================================
 if __name__ == "__main__":
     points = load_points("data/sample.csv")
     print(f"Loaded {len(points)} points:")
