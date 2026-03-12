@@ -4,7 +4,7 @@ K-Means Clustering - Command Line Interface
 A CLI tool for clustering data using K-Means algorithm.
 Supports multiple initialization methods, feature scaling, and result export.
 
-Author: Person 2
+Author: Shaista Shafi
 Date: February 2026
 """
 
