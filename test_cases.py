@@ -1,5 +1,5 @@
 """
-test_kmeans.py
+test_cases.py
 Test suite for K-Means Clustering CLI project.
 
 Covers:
@@ -8,9 +8,9 @@ Covers:
   - Input validation logic (app.py)
 
 Run with:
-    python -m pytest test_kmeans.py -v
+    python -m pytest test_cases.py -v
     or
-    python test_kmeans.py
+    python test_cases.py
 """
 
 import sys
